@@ -247,6 +247,7 @@ def get_last_checkpoint_filename(output_dir, model_name):
 
 ## 修改版 state_dict的一定有,其他的不一定
 def customized_loader_checkpoint(model, optimizer, scaler, pre_epoch, filepath, local_rank):
+    # 默认使用gpu加载数据
     checkpoint = torch.load(filepath)
     
     if 'epoch' in checkpoint:
@@ -291,7 +292,7 @@ def validate(model, criterion, valset, epoch, batch_iter, batch_size,
     """Handles all the validation scoring and printing"""
     with evaluating(model), torch.no_grad():
         val_sampler = DistributedSampler(valset) if distributed_run else None
-        val_loader = DataLoader(valset, num_workers=1, shuffle=False,
+        val_loader = DataLoader(valset, num_workers=6, shuffle=False,
                                 sampler=val_sampler,
                                 batch_size=batch_size, pin_memory=False,
                                 collate_fn=collate_fn)
@@ -456,7 +457,7 @@ def main():
         train_sampler = None
         shuffle = True
 
-    train_loader = DataLoader(trainset, num_workers=1, shuffle=shuffle,
+    train_loader = DataLoader(trainset, num_workers=6, shuffle=shuffle,
                               sampler=train_sampler,
                               batch_size=args.batch_size, pin_memory=False,
                               drop_last=True, collate_fn=collate_fn)

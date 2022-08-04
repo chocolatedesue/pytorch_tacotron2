@@ -229,12 +229,15 @@ def main():
     jitted_tacotron2 = torch.jit.script(tacotron2)
 
     texts = []
-    try:
-        f = open(args.input, 'r')
-        texts = f.readlines()
-    except:
-        print("Could not read file")
-        sys.exit(1)
+    if args.text:
+        texts.append(args.text)
+    else:
+        try:
+            f = open(args.input, 'r')
+            texts = f.readlines()
+        except:
+            print("Could not read file")
+            sys.exit(1)
 
     if args.include_warmup:
         sequence = torch.randint(low=0, high=148, size=(1,50)).long()
