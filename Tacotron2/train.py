@@ -25,6 +25,7 @@
 #
 # *****************************************************************************
 
+import collections
 import os
 import time
 import argparse
@@ -55,6 +56,7 @@ def parse_args(parser):
 
     parser.add_argument('-o', '--output', type=str, required=True,
                         help='Directory to save checkpoints')
+    ## useless argument, because the path is indicated in the train of filelists
     parser.add_argument('-d', '--dataset-path', type=str,
                         default='./', help='Path to dataset')
     parser.add_argument('-m', '--model-name', type=str, default='', required=True,
@@ -68,17 +70,20 @@ def parse_args(parser):
 
     parser.add_argument('--config-file', action=ParseFromConfigFile,
                          type=str, help='Path to configuration file')
-    parser.add_argument('--seed', default=None, type=int,
+    parser.add_argument('--seed', default=1234, type=int,
                         help='Seed for random number generators')
+
+
 
     # training
     training = parser.add_argument_group('training setup')
     training.add_argument('--epochs', type=int, required=True,
                           help='Number of total epochs to run')
-    training.add_argument('--epochs-per-checkpoint', type=int, default=50,
+    training.add_argument('--epochs_per_checkpoint', type=int, default=100,
                           help='Number of epochs per checkpoint')
     training.add_argument('--checkpoint-path', type=str, default='',
                           help='Checkpoint path to resume training')
+    # try to avoid to use this 
     training.add_argument('--resume-from-last', action='store_true',
                           help='Resumes training from the last checkpoint; uses the directory provided with \'--output\' option to search for the checkpoint \"checkpoint_<model_name>_last.pt\"')
     training.add_argument('--dynamic-loss-scaling', type=bool, default=True,
@@ -91,6 +96,9 @@ def parse_args(parser):
                           help='Run cudnn benchmark')
     training.add_argument('--disable-uniform-initialize-bn-weight', action='store_true',
                           help='disable uniform initialization of batchnorm layer weight')
+
+
+
 
     optimization = parser.add_argument_group('optimization setup')
     optimization.add_argument(
@@ -108,16 +116,17 @@ def parse_args(parser):
 
     # dataset parameters
     dataset = parser.add_argument_group('dataset parameters')
+    # unknown args functions
     dataset.add_argument('--load-mel-from-disk', action='store_true',
                          help='Loads mel spectrograms from disk instead of computing them on the fly')
     dataset.add_argument('--training-files',
-                         default='filelists/ljs_audio_text_train_filelist.txt',
+                         requried=True,
                          type=str, help='Path to training filelist')
     dataset.add_argument('--validation-files',
-                         default='filelists/ljs_audio_text_val_filelist.txt',
+                         required=True,
                          type=str, help='Path to validation filelist')
-    dataset.add_argument('--text-cleaners', nargs='*',
-                         default=['english_cleaners'], type=str,
+    dataset.add_argument('--text_cleaners', nargs='*',
+                         default=['japanese_tokenization_cleaners'], type=str,
                          help='Type of text cleaners for input text')
 
     # audio parameters
@@ -236,23 +245,30 @@ def get_last_checkpoint_filename(output_dir, model_name):
         return ""
 
 
-def load_checkpoint(model, optimizer, scaler, epoch, filepath, local_rank):
+## 修改版 state_dict的一定有,其他的不一定
+def customized_loader_checkpoint(model, optimizer, scaler, pre_epoch, filepath, local_rank):
+    checkpoint = torch.load(filepath)
+    
+    if 'epoch' in checkpoint:
+        pre_epoch[0] = checkpoint['epoch']
+    elif 'iteration' in checkpoint:
+        pre_epoch[0] = checkpoint['iteration']
 
-    checkpoint = torch.load(filepath, map_location='cpu')
+    ## 兼容官方新版预训练模型
+    tmp = checkpoint['state_dict']
+    def func(tmp):
+        res = collections.OrderedDict()
+        for i,j in tmp.items():
+            res[i[7:]]=j
+        return res
+    if "module.embedding.weight" in tmp:
+        tmp = func(tmp)
+    model.load_state_dict(tmp)
+    if 'optimizer' in checkpoint:
+        optimizer.load_state_dict(checkpoint['optimizer'])
+    if 'scaler' in checkpoint:
+        scaler.load_state_dict(checkpoint['scaler'])
 
-    epoch[0] = checkpoint['epoch']+1
-    device_id = local_rank % torch.cuda.device_count()
-    torch.cuda.set_rng_state(checkpoint['cuda_rng_state_all'][device_id])
-    if 'random_rng_states_all' in checkpoint:
-        torch.random.set_rng_state(checkpoint['random_rng_states_all'][device_id])
-    elif 'random_rng_state' in checkpoint:
-        torch.random.set_rng_state(checkpoint['random_rng_state'])
-    else:
-        raise Exception("Model checkpoint must have either 'random_rng_state' or 'random_rng_states_all' key.")
-    model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    scaler.load_state_dict(checkpoint['scaler'])
-    return checkpoint['config']
 
 
 # adapted from: https://discuss.pytorch.org/t/opinion-eval-should-be-a-context-manager/18998/3
@@ -350,7 +366,9 @@ def main():
         local_rank = int(os.environ['LOCAL_RANK'])
         world_size = int(os.environ['WORLD_SIZE'])
     else:
+        # 0
         local_rank = args.rank
+        # 1
         world_size = args.world_size
 
     distributed_run = world_size > 1
@@ -406,13 +424,16 @@ def main():
     except AttributeError:
         sigma = None
 
+    # 自己训练的epoch数
     start_epoch = [0]
+    # 预训练模型的epoch数
+    pre_epoch = [0]
 
-    if args.resume_from_last:
-        args.checkpoint_path = get_last_checkpoint_filename(args.output, model_name)
+    # if args.resume_from_last:
+    #     args.checkpoint_path = get_last_checkpoint_filename(args.output, model_name)
 
     if args.checkpoint_path != "":
-        model_config = load_checkpoint(model, optimizer, scaler, start_epoch,
+        customized_loader_checkpoint(model, optimizer, scaler, pre_epoch,
                                        args.checkpoint_path, local_rank)
 
     start_epoch = start_epoch[0]
@@ -541,7 +562,7 @@ def main():
                                                args.amp)
 
         if (epoch % args.epochs_per_checkpoint == 0) and (args.bench_class == "" or args.bench_class == "train"):
-            save_checkpoint(model, optimizer, scaler, epoch, model_config,
+            save_checkpoint(model, optimizer, scaler, epoch + pre_epoch[0], model_config,
                             args.output, args.model_name, local_rank, world_size)
         if local_rank == 0:
             DLLogger.flush()

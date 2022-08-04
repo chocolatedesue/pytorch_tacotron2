@@ -25,6 +25,7 @@
 #
 # *****************************************************************************
 
+from traitlets import default
 from tacotron2.text import text_to_sequence
 import models
 import torch
@@ -47,15 +48,20 @@ def parse_args(parser):
     """
     Parse commandline arguments.
     """
-    parser.add_argument('-i', '--input', type=str, required=True,
+    # use cli to add text
+    parser.add_argument('-t','--text',type=str,default=None,help="the text to be synthesize")
+
+    parser.add_argument('-i', '--input', type=str,
                         help='full path to the input text (phareses separated by new line)')
+
     parser.add_argument('-o', '--output', required=True,
                         help='output folder to save audio (file per phrase)')
     parser.add_argument('--suffix', type=str, default="", help="output filename suffix")
-    parser.add_argument('--tacotron2', type=str,
+    parser.add_argument('--tacotron2', type=str,required=True,
                         help='full path to the Tacotron2 model checkpoint file')
-    parser.add_argument('--waveglow', type=str,
+    parser.add_argument('--waveglow', type=str,required=True,
                         help='full path to the WaveGlow model checkpoint file')
+
     parser.add_argument('-s', '--sigma-infer', default=0.9, type=float)
     parser.add_argument('-d', '--denoising-strength', default=0.01, type=float)
     parser.add_argument('-sr', '--sampling-rate', default=22050, type=int,
@@ -156,8 +162,15 @@ def prepare_input_sequence(texts, cpu_run=False):
 
     d = []
     for i,text in enumerate(texts):
-        d.append(torch.IntTensor(
-            text_to_sequence(text, ['english_cleaners'])[:]))
+        # avoid the invoke relations 
+        res = os.getenv('text_cleanner')
+        if not res:
+            d.append(torch.IntTensor(
+                text_to_sequence(text, ['japanese_tokenization_cleaners'])[:]))
+        else:
+             d.append(torch.IntTensor(
+                text_to_sequence(text, [res])[:]))   
+
 
     text_padded, input_lengths = pad_sequences(d)
     if not cpu_run:
@@ -168,6 +181,7 @@ def prepare_input_sequence(texts, cpu_run=False):
         input_lengths = input_lengths.long()
 
     return text_padded, input_lengths
+
 
 
 class MeasureTime():
