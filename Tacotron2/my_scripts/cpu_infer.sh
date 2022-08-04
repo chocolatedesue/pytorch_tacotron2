@@ -1,0 +1,2 @@
+mkdir -p output/
+python inference.py --tacotron2 /content/train/ayachi_nene_2 --waveglow /content/train/waveglow_256channels_universal_v5.pt   --wn-channels 256 -o output/ --include-warmup   -t "また何かあったら、いつでも部室に来て下さい"  --cpu

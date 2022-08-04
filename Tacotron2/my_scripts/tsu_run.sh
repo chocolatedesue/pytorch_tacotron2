@@ -1,0 +1,2 @@
+mkdir -p output
+python train.py -m Tacotron2 -o output/ --amp -lr 1e-3 --epochs 1501 -bs 32 --weight-decay 1e-6 --grad-clip-thresh 1.0 --cudnn-enabled --training-files=filelists/tsu_train.txt  --validation-files=filelists/tsu_val.txt  --log-file nvlog.json --anneal-steps 500 1000 1500 --anneal-factor 0.3  --text-cleaners japanese_tokenization_cleaners --checkpoint-path  /content/train/ayachi_nene_2 

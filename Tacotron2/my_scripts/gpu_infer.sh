@@ -1,0 +1,1 @@
+python inference.py --tacotron2  /mydata/model/tsu_5900.pt --waveglow /mydata/model/waveglow_1076430_14000_amp --wn-channels 256 -o output/  --fp16     -t  
