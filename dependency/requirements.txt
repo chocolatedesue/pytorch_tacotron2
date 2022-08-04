@@ -1,0 +1,9 @@
+matplotlib
+numpy
+inflect
+librosa
+scipy
+pyopenjtalk
+janome
+unidecode
+torch
