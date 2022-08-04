@@ -1,0 +1,1 @@
+python hifi_infer.py -t "ご迷惑をおかけして、本当にすみません" -o output/ --tacotron2 /content/tsu_6100.pt --hifigan_path /content/g_atri_hifigan_02510000 --hifigan_config /content/config.json 

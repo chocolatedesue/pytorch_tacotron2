@@ -222,7 +222,7 @@ def main():
         audio = raw_audio.squeeze()
         audio = audio * 32768.0
         audio = audio.cpu().numpy().astype('int16')
-        write(os.path.join("output",'audio.wav'), 22050, audio)
+        write(os.path.join("output",'audio_0.wav'), 22050, audio)
 
 
 

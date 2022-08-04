@@ -20,9 +20,10 @@
 TODO: add the tree graph of the project structures
 
 ## Pretrained model 
-> 基于 @CjangCjengh [Ayachi Nene model2](https://sjtueducn-my.sharepoint.com/:u:/g/personal/cjang_cjengh_sjtu_edu_cn/ETNLDYH_ZRpMmNR0VGALhNQB5-LiJOqTaWQz8tXtbvCV-g?e=7nf2Ec)  进行迁移训练
-1. 魔女的夜宴 [椎叶䌷]()
-2. dracuriot [布良梓]()
+> 基于 @CjangCjengh [Ayachi Nene model2](https://sjtueducn-my.sharepoint.com/:u:/g/personal/cjang_cjengh_sjtu_edu_cn/ETNLDYH_ZRpMmNR0VGALhNQB5-LiJOqTaWQz8tXtbvCV-g?e=7nf2Ec)  进行迁移训练 cleanner: japanese_tokenization_cleaners 
+1. 魔女的夜宴 [椎叶䌷](https://stuxidianeducn-my.sharepoint.com/:u:/g/personal/21009200431_stu_xidian_edu_cn/EW6VP2LzfoROsde1Zg3kl2oBSr_A5YE6pI3t4NuNCPw31Q?e=HqPfU0)
+<!-- 2. dracuriot [布良梓]() -->
+> 提示：迁移学习最好保证text_cleanner一致获取最大效果
 
 ## Try it out 
 <!-- TODO: add a colab notebook -->
@@ -54,7 +55,7 @@ TODO: add the tree graph of the project structures
 
 
 ## License
-本项目采用 GNU GPLv3
+本项目采用 GNU GPLv2
 
 
 
