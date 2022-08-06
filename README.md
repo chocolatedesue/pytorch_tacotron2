@@ -16,13 +16,11 @@
 2. 在items目录运行train.py程序开始训练，运行命令可参考my_scripts，official_scripts和note_books进行设置
 3. infer同理
 
-## 项目结构
-TODO: add the tree graph of the project structures
 
 ## Pretrained model 
 > 基于 @CjangCjengh [Ayachi Nene model2](https://sjtueducn-my.sharepoint.com/:u:/g/personal/cjang_cjengh_sjtu_edu_cn/ETNLDYH_ZRpMmNR0VGALhNQB5-LiJOqTaWQz8tXtbvCV-g?e=7nf2Ec)  进行迁移训练 cleanner: japanese_tokenization_cleaners 
 1. 魔女的夜宴 [椎叶䌷](https://stuxidianeducn-my.sharepoint.com/:u:/g/personal/21009200431_stu_xidian_edu_cn/EW6VP2LzfoROsde1Zg3kl2oBSr_A5YE6pI3t4NuNCPw31Q?e=HqPfU0)
-<!-- 2. dracuriot [布良梓]() -->
+2. dracuriot [布良梓](https://link.jscdn.cn/sharepoint/aHR0cHM6Ly9zdHV4aWRpYW5lZHVjbi1teS5zaGFyZXBvaW50LmNvbS86dTovZy9wZXJzb25hbC8yMTAwOTIwMDQzMV9zdHVfeGlkaWFuX2VkdV9jbi9FZl9Ob3F1YVp3Vk91ZW9lS1Q2eXUtQUJrV3lBcXIxMVpIUlRJZlYtdk9vSVZ3P2U9cGR1eHkw.pt)
 > 提示：迁移学习最好保证text_cleanner一致获取最大效果
 
 ## Try it out 
