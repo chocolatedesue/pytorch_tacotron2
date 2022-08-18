@@ -120,7 +120,7 @@ def parse_args(parser):
     dataset.add_argument('--load-mel-from-disk', action='store_true',
                          help='Loads mel spectrograms from disk instead of computing them on the fly')
     dataset.add_argument('--training-files',
-                         requried=True,
+                         required=True,
                          type=str, help='Path to training filelist')
     dataset.add_argument('--validation-files',
                          required=True,
